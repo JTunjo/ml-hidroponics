@@ -15,7 +15,9 @@ tgt_conn.execute("PRAGMA foreign_keys = ON;")
 tables_to_copy = [
     "sensor",
     "sensor_data",
-    "calendar_executions"
+    "calendar_executions",
+    "schedule",
+    "schedule_data"
 ]
 
 for table in tables_to_copy:
