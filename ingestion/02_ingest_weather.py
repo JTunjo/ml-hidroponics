@@ -1,5 +1,5 @@
 import openmeteo_requests
-
+import sqlite3
 import pandas as pd
 import requests_cache
 from retry_requests import retry
@@ -13,10 +13,10 @@ openmeteo = openmeteo_requests.Client(session = retry_session)
 # The order of variables in hourly or daily is important to assign them correctly below
 url = "https://archive-api.open-meteo.com/v1/archive"
 params = {
-	"latitude": 52.52,
-	"longitude": 13.41,
-	"start_date": "2026-01-07",
-	"end_date": "2026-01-21",
+	"latitude": 4.59145,
+	"longitude": -74.175034,
+	"start_date": "2025-12-01",
+	"end_date": "2025-12-31",
 	"hourly": ["temperature_2m", "relative_humidity_2m", "rain", "surface_pressure", "wind_speed_10m"],
 }
 responses = openmeteo.weather_api(url, params=params)
@@ -49,4 +49,21 @@ hourly_data["surface_pressure"] = hourly_surface_pressure
 hourly_data["wind_speed_10m"] = hourly_wind_speed_10m
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
-print("\nHourly data\n", hourly_dataframe)
+#print("\nHourly data\n", hourly_dataframe)
+
+DB_PATH = "data/greenhouse.db"
+# Ensure column name matches table
+hourly_dataframe = hourly_dataframe.rename(columns={"date": "datetime"})
+# Optional but strongly recommended
+hourly_dataframe["datetime"] = hourly_dataframe["datetime"].astype(str)
+conn = sqlite3.connect(DB_PATH)
+
+#print(hourly_dataframe)
+hourly_dataframe.to_sql(
+    "weather_hourly",
+    conn,
+    if_exists="append",
+    index=False
+)
+
+conn.close()
