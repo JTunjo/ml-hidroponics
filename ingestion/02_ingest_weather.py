@@ -15,9 +15,10 @@ url = "https://archive-api.open-meteo.com/v1/archive"
 params = {
 	"latitude": 4.59145,
 	"longitude": -74.175034,
-	"start_date": "2026-01-22",
-	"end_date": "2026-01-25",
+	"start_date": "2026-01-01",
+	"end_date": "2026-01-24",
 	"hourly": ["temperature_2m", "relative_humidity_2m", "rain", "surface_pressure", "wind_speed_10m"],
+	"timezone": "auto",
 }
 responses = openmeteo.weather_api(url, params=params)
 

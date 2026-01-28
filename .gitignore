@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+superset-venv/
+
+# Databases
+*.db
+*.sqlite
+*.duckdb
+
+# Superset internal
+superset.db
+.cache.sqlite
+
+.venv/
+superset-venv/

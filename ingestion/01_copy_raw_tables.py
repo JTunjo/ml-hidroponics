@@ -13,7 +13,6 @@ tgt_conn = sqlite3.connect(TARGET_DB)
 tgt_conn.execute("PRAGMA foreign_keys = ON;")
 
 tables_to_copy = [
-    "sensor",
     "sensor_data",
     "calendar_executions",
     "schedule",
