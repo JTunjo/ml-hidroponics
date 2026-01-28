@@ -1,50 +1,34 @@
 import sqlite3
+import duckdb
+import pandas as pd
 from pathlib import Path
 
 # Paths
 SOURCE_DB = Path.home() / "Downloads" / "datos_sensores.db"
-TARGET_DB = Path("data/greenhouse.db")
+TARGET_DB = Path("data/greenhouse.duckdb")
 
-# Connect to source and target
+# Connect to source (SQLite)
 src_conn = sqlite3.connect(SOURCE_DB)
-tgt_conn = sqlite3.connect(TARGET_DB)
 
-# Enable foreign keys (good habit)
-tgt_conn.execute("PRAGMA foreign_keys = ON;")
+# Connect to target (DuckDB)
+tgt_conn = duckdb.connect(TARGET_DB)
 
 tables_to_copy = [
     "sensor_data",
     "calendar_executions",
     "schedule",
-    "schedule_data"
+    "schedule_data",
 ]
 
 for table in tables_to_copy:
     print(f"\nCopying table: {table}")
 
-    # Read source table
-    df = None
-    df = src_conn.execute(f"SELECT * FROM {table}").fetchall()
+    # Read entire table into pandas
+    df = pd.read_sql(f"SELECT * FROM {table}", src_conn)
 
-    # Get schema from source
-    schema = src_conn.execute(
-        f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table}';"
-    ).fetchone()[0]
-
-    tgt_conn.execute(f"DROP TABLE IF EXISTS raw_{table};")
-    tgt_conn.execute(f"DROP TABLE IF EXISTS {table};")
-
-    # Create table in target
-    tgt_conn.execute(schema)
-
-    # Copy data
-    placeholders = ",".join(["?"] * len(df[0]))
-    tgt_conn.executemany(
-        f"INSERT INTO {table} VALUES ({placeholders})",
-        df
-    )
-
-    tgt_conn.commit()
+    # Drop + recreate table in DuckDB
+    tgt_conn.execute(f"DROP TABLE IF EXISTS {table}")
+    tgt_conn.execute(f"CREATE TABLE {table} AS SELECT * FROM df")
 
     # Validate counts
     count = tgt_conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
