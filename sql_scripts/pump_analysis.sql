@@ -1,6 +1,4 @@
-select start_time, execution_time
-from calendar_executions
-where executed = 1;
+select start_time, execution_time from calendar_executions where executed = 1;
 /*
 ┌────────────────┬─────────────┬─────────┬─────────┬─────────┬─────────┐
 │  column_name   │ column_type │  null   │   key   │ default │  extra  │

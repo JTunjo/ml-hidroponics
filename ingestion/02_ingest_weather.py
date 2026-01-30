@@ -53,3 +53,14 @@ hourly_data = {
     "surface_pressure": hourly.Variables(3).ValuesAsNumpy(),
     "wind_speed_10m": hourly.Variables(4).ValuesAsNumpy(),
 }
+hourly_df = pd.DataFrame(hourly_data)
+DB_PATH = Path("data/greenhouse.duckdb")
+con = duckdb.connect(DB_PATH)
+con.register("hourly_df", hourly_df)
+
+con.execute("""
+INSERT INTO weather_hourly (datetime,temperature_2m,relative_humidity_2m,rain,surface_pressure,wind_speed_10m)
+SELECT h.datetime,h.temperature_2m,h.relative_humidity_2m,h.rain,h.surface_pressure,h.wind_speed_10m FROM hourly_df as h LEFT JOIN weather_hourly as wh ON h.datetime = wh.datetime WHERE wh.datetime IS NULL;
+""")
+
+con.close()
