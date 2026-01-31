@@ -1,5 +1,6 @@
-insert into all_executions
+insert into all_executions (execution_id, _source, start_time, runtime)
 (select 
+    uuid(),
     'calendar' as _source,
     CAST(ce.start_time AS TIMESTAMP) as start_time, 
     ce.execution_time as runtime
@@ -11,6 +12,7 @@ left join all_executions ae
 where ce.executed = 1 and ae.start_time is null)
 union all
 (select 
+    uuid(),
     'schedule' as _source,
     cast(sd.last_execution as timestamp) as start_time,
     sc.execution_time as runtime
