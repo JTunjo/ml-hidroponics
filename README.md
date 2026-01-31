@@ -9,3 +9,4 @@ superset run \
   --reload
 superset run -p 8088
 - python3 ingestion/02_ingest_weather.py
+- python3 ingestion/01_copy_raw_tables.py
