@@ -25,10 +25,12 @@ for table in tables_to_copy:
 
     # Read entire table into pandas
     df = pd.read_sql(f"SELECT * FROM {table}", src_conn)
-
+    df = df.astype(str)
     # Drop + recreate table in DuckDB
     tgt_conn.execute(f"DROP TABLE IF EXISTS {table}")
-    tgt_conn.execute(f"CREATE TABLE {table} AS SELECT * FROM df")
+    seq = f"CREATE TABLE {table} AS SELECT * FROM df"
+    print(f"Executing: {seq}")
+    tgt_conn.execute(seq)
 
     # Validate counts
     count = tgt_conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
