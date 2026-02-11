@@ -10,12 +10,3 @@ superset run \
 superset run -p 8088
 - python3 ingestion/02_ingest_weather.py
 - python3 ingestion/01_copy_raw_tables.py
-
-TRUNCAR TABLA DE CLIMA
-CAMBIAR MEDIANA EN vw_medidas_unidas
-reemplazar todos los promedios por medianas
-Reconsiderar la franja de cálculo de medidas en ejecución
-Arreglar franjas del día en detailed_values
-Arreglar nombres de las franjas del día
-Gráfica que correlacione lluvia, h_interna, ejecución
-Ajustar offset de clima en la vista
