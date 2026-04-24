@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Greenhouse Operations Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f172a; --surf:#1e293b; --card:#273549; --border:#334155;
+  --blue:#38bdf8; --green:#4ade80; --amber:#fbbf24; --red:#f87171; --purple:#a78bfa;
+  --text:#e2e8f0; --muted:#94a3b8; --dim:#64748b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+/* HEADER */
+.hdr{
+  background:linear-gradient(120deg,#1a3a5c 0%,#0f172a 60%);
+  border-bottom:2px solid var(--blue);
+  padding:26px 40px 22px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+}
+.hdr h1{font-size:1.5rem;font-weight:700;color:var(--blue);letter-spacing:.2px}
+.hdr .sub{color:var(--muted);font-size:.8rem;margin-top:5px}
+.badge{font-size:.72rem;padding:5px 14px;border-radius:20px;
+  background:rgba(56,189,248,.1);border:1px solid var(--blue);color:var(--blue);white-space:nowrap}
+
+/* KPI GRID */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:0;
+  border-bottom:1px solid var(--border);
+}
+.kpi{
+  padding:22px 24px;
+  border-right:1px solid var(--border);
+  position:relative;
+}
+.kpi:last-child{border-right:none}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--kpi-color,var(--blue));
+}
+.kpi-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.kpi-val{font-size:2rem;font-weight:700;line-height:1;color:var(--text)}
+.kpi-sub{font-size:.7rem;color:var(--dim);margin-top:6px}
+
+/* CHARTS */
+.charts{padding:28px 40px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cc{background:var(--surf);border-radius:10px;border:1px solid var(--border);padding:20px 22px}
+.cc.full{grid-column:1/-1}
+.cc-title{
+  font-size:.78rem;font-weight:600;color:var(--blue);
+  text-transform:uppercase;letter-spacing:.7px;
+  padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--border);
+}
+.cw{position:relative;height:220px}
+.cw.tall{height:280px}
+
+/* TABLE */
+.tbl-wrap{padding:0 40px 32px}
+.tbl-title{
+  font-size:.78rem;font-weight:600;color:var(--blue);
+  text-transform:uppercase;letter-spacing:.7px;
+  padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--border);
+}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead th{
+  text-align:right;color:var(--muted);font-weight:500;
+  padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap
+}
+thead th:first-child{text-align:left}
+tbody tr:nth-child(even){background:rgba(255,255,255,.02)}
+tbody td{padding:7px 12px;border-bottom:1px solid rgba(51,65,85,.4);text-align:right}
+tbody td:first-child{text-align:left;color:var(--muted)}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:600}
+.pill.good{background:rgba(74,222,128,.15);color:var(--green)}
+.pill.warn{background:rgba(251,191,36,.15);color:var(--amber)}
+.pill.bad {background:rgba(248,113,113,.15);color:var(--red)}
+.pill.none{background:rgba(148,163,184,.1);color:var(--dim)}
+
+footer{text-align:center;font-size:.7rem;color:var(--dim);padding:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <h1>🌱 Greenhouse Operations Dashboard</h1>
+    <div class="sub">Sensor data from 2026-03-02 &nbsp;·&nbsp; Pump data from 2026-02-05 &nbsp;·&nbsp; Generated 2026-04-23</div>
+  </div>
+  <div class="badge">Actuator #1 &nbsp;|&nbsp; Sensors 101–104</div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid">
+  <div class="kpi" style="--kpi-color:var(--blue)">
+    <div class="kpi-lbl">Total Online Hours</div>
+    <div class="kpi-val">681</div>
+    <div class="kpi-sub">sensor 101 reporting</div>
+  </div>
+  <div class="kpi" style="--kpi-color:var(--green)">
+    <div class="kpi-lbl">Avg % Online / Day</div>
+    <div class="kpi-val">88.7%</div>
+    <div class="kpi-sub">over 32 days w/ data</div>
+  </div>
+  <div class="kpi" style="--kpi-color:var(--muted)">
+    <div class="kpi-lbl">Total Pump Attempts</div>
+    <div class="kpi-val">293</div>
+    <div class="kpi-sub">all states since 2026-02-01</div>
+  </div>
+  <div class="kpi" style="--kpi-color:var(--amber)">
+    <div class="kpi-lbl">Raw Success Rate</div>
+    <div class="kpi-val">33.4%</div>
+    <div class="kpi-sub">state=1 / total (98 of 293)</div>
+  </div>
+  <div class="kpi" style="--kpi-color:var(--green)">
+    <div class="kpi-lbl">Net Success Rate</div>
+    <div class="kpi-val">66.9%</div>
+    <div class="kpi-sub">93 of 139 10-min windows</div>
+  </div>
+  <div class="kpi" style="--kpi-color:var(--red)">
+    <div class="kpi-lbl">Failed Windows</div>
+    <div class="kpi-val">46</div>
+    <div class="kpi-sub">windows with no state=1</div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts">
+
+  <div class="cc full">
+    <div class="cc-title">📡 Sensor Online Hours &amp; % Coverage per Day (sensor 101)</div>
+    <div class="cw tall"><canvas id="onlineChart"></canvas></div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">🔌 Pump Attempts by State per Day</div>
+    <div class="cw"><canvas id="attemptsChart"></canvas></div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">✅ Raw vs Net Pump Success Rate per Day</div>
+    <div class="cw"><canvas id="successChart"></canvas></div>
+  </div>
+
+</div>
+
+<!-- DAILY TABLE -->
+<div class="tbl-wrap">
+  <div class="tbl-title">📋 Daily Breakdown — All Metrics</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Online h</th>
+        <th>% Online</th>
+        <th>Total Att.</th>
+        <th>State 1</th>
+        <th>State 0</th>
+        <th>State 2</th>
+        <th>State 3</th>
+        <th>Raw Rate</th>
+        <th>Win. Needed</th>
+        <th>Win. Success</th>
+        <th>Net Rate</th>
+      </tr>
+    </thead>
+    <tbody id="tblBody"></tbody>
+  </table>
+</div>
+
+<footer>Generated from hidroponia_completa.duckdb &nbsp;·&nbsp; All pump times UTC &nbsp;·&nbsp; Net rate = 10-min windows with state∈(1,2) that resolved to state=1</footer>
+
+<script>
+const DAYS  = ["2026-02-01", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-07", "2026-02-08", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-14", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-02-28", "2026-03-01", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-07", "2026-03-08", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-14", "2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15"];
+const SLBL  = ["02/01", "02/02", "02/03", "02/04", "02/05", "02/06", "02/07", "02/08", "02/09", "02/10", "02/11", "02/12", "02/13", "02/14", "02/15", "02/16", "02/17", "02/18", "02/19", "02/20", "02/21", "02/22", "02/23", "02/24", "02/25", "02/26", "02/27", "02/28", "03/01", "03/02", "03/03", "03/04", "03/05", "03/06", "03/07", "03/08", "03/09", "03/10", "03/11", "03/12", "03/13", "03/14", "03/15", "03/16", "03/17", "03/18", "03/19", "03/20", "03/21", "03/22", "03/23", "03/24", "03/25", "03/26", "03/27", "03/28", "03/29", "03/30", "03/31", "04/01", "04/02", "04/03", "04/04", "04/05", "04/06", "04/07", "04/08", "04/09", "04/10", "04/11", "04/12", "04/13", "04/14", "04/15"];
+const OH    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 15, 24, 24, 24, 24, 24, 24, 24, 24, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17, 18, 24, 24, 24, 24, 24, 11];
+const PCT   = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8.3, 62.5, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 95.8, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 66.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.5, 70.8, 75.0, 100.0, 100.0, 100.0, 100.0, 100.0, 45.8];
+const S1    = [0, 0, 0, 0, 16, 0, 6, 0, 0, 0, 0, 0, 0, 1, 0, 0, 5, 1, 3, 2, 0, 0, 0, 1, 0, 2, 3, 1, 0, 0, 0, 0, 1, 3, 3, 3, 2, 2, 2, 3, 3, 4, 3, 2, 2, 2, 2, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3, 1];
+const S0    = [0, 0, 0, 0, 5, 0, 16, 0, 0, 3, 2, 0, 0, 9, 0, 2, 46, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const S2    = [0, 0, 0, 0, 24, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 1, 4, 6, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0];
+const S3    = [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const TATT  = [0, 0, 0, 0, 47, 0, 27, 0, 0, 3, 2, 0, 0, 10, 0, 2, 100, 1, 3, 5, 4, 6, 5, 1, 0, 2, 3, 4, 0, 0, 0, 0, 1, 3, 3, 4, 4, 6, 4, 3, 3, 4, 3, 2, 2, 2, 2, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 3, 3, 1];
+const RRATE = [null, null, null, null, 34.0, null, 22.2, null, null, 0.0, 0.0, null, null, 10.0, null, 0.0, 5.0, 100.0, 100.0, 40.0, 0.0, 0.0, 0.0, 100.0, null, 100.0, 100.0, 25.0, null, null, null, null, 100.0, 100.0, 100.0, 75.0, 50.0, 33.3, 50.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 50.0, 100.0, 100.0, 100.0, 100.0];
+const NEED  = [0, 0, 0, 0, 21, 0, 8, 0, 0, 0, 0, 0, 0, 1, 0, 0, 28, 1, 3, 3, 2, 3, 2, 1, 0, 2, 3, 1, 0, 0, 0, 0, 1, 3, 3, 3, 2, 3, 3, 3, 3, 4, 3, 2, 2, 2, 2, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 1];
+const SUCC  = [0, 0, 0, 0, 11, 0, 6, 0, 0, 0, 0, 0, 0, 1, 0, 0, 5, 1, 3, 2, 0, 0, 0, 1, 0, 2, 3, 1, 0, 0, 0, 0, 1, 3, 3, 3, 2, 2, 2, 3, 3, 4, 3, 2, 2, 2, 2, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3, 1];
+const NRATE = [null, null, null, null, 52.4, null, 75.0, null, null, null, null, null, null, 100.0, null, null, 17.9, 100.0, 100.0, 66.7, 0.0, 0.0, 0.0, 100.0, null, 100.0, 100.0, 100.0, null, null, null, null, 100.0, 100.0, 100.0, 100.0, 100.0, 66.7, 66.7, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 66.7, 100.0, 100.0, 100.0, 100.0];
+
+const DG = 'rgba(148,163,184,0.07)';
+const xt = {color:'#64748b', font:{size:9}, maxRotation:60, minRotation:45};
+const yt = {color:'#94a3b8'};
+
+// ── Chart 1: Online hours + % ─────────────────────────────────────────────
+new Chart(document.getElementById('onlineChart'),{
+  type:'bar',
+  data:{
+    labels:SLBL,
+    datasets:[
+      {label:'Online Hours',data:OH,backgroundColor:'rgba(56,189,248,0.5)',borderColor:'#38bdf8',borderWidth:1,yAxisID:'yH',order:2},
+      {label:'% Online',data:PCT,type:'line',borderColor:'#4ade80',pointRadius:1.5,borderWidth:2,tension:.3,fill:false,yAxisID:'yP',order:1}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+    scales:{
+      x:{ticks:xt, grid:{color:DG}},
+      yH:{type:'linear',position:'left',min:0,max:24,
+           title:{display:true,text:'Hours',color:'#38bdf8'},
+           ticks:{...yt,color:'#38bdf8'}, grid:{color:DG}},
+      yP:{type:'linear',position:'right',min:0,max:100,
+           title:{display:true,text:'% Online',color:'#4ade80'},
+           ticks:{color:'#4ade80',callback:v=>v+'%'}, grid:{drawOnChartArea:false}}
+    }
+  }
+});
+
+// ── Chart 2: Attempts by state ────────────────────────────────────────────
+new Chart(document.getElementById('attemptsChart'),{
+  type:'bar',
+  data:{
+    labels:SLBL,
+    datasets:[
+      {label:'State 1 – Success',   data:S1, backgroundColor:'rgba(74,222,128,0.8)',  stack:'s'},
+      {label:'State 2 – Sent/Retry',data:S2, backgroundColor:'rgba(251,191,36,0.75)', stack:'s'},
+      {label:'State 0 – Fail',      data:S0, backgroundColor:'rgba(248,113,113,0.8)', stack:'s'},
+      {label:'State 3 – Other',     data:S3, backgroundColor:'rgba(167,139,250,0.7)', stack:'s'}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+    scales:{
+      x:{stacked:true, ticks:xt, grid:{color:DG}},
+      y:{stacked:true, ticks:yt, grid:{color:DG},
+          title:{display:true,text:'Attempts',color:'#94a3b8'}}
+    }
+  }
+});
+
+// ── Chart 3: Raw vs Net rate ──────────────────────────────────────────────
+new Chart(document.getElementById('successChart'),{
+  type:'line',
+  data:{
+    labels:SLBL,
+    datasets:[
+      {label:'Raw Success Rate (%)',data:RRATE,borderColor:'#fb923c',pointRadius:3,borderWidth:2,tension:.3,spanGaps:true,fill:false},
+      {label:'Net Rate (%) – 10-min windows',data:NRATE,borderColor:'#4ade80',pointRadius:3,borderWidth:2,tension:.3,spanGaps:true,fill:false}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+    scales:{
+      x:{ticks:xt, grid:{color:DG}},
+      y:{min:0,max:100, ticks:{...yt,callback:v=>v+'%'}, grid:{color:DG}}
+    }
+  }
+});
+
+// ── Daily table ───────────────────────────────────────────────────────────
+function pill(val, thresholds){
+  if(val===null||val===undefined) return '<span class="pill none">—</span>';
+  const cls = val>=thresholds[0]?'good':val>=thresholds[1]?'warn':'bad';
+  return `<span class="pill ${cls}">${val}%</span>`;
+}
+const tb = document.getElementById('tblBody');
+DAYS.forEach((d,i)=>{
+  const hasData = TATT[i]>0||OH[i]>0;
+  if(!hasData) return;
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${d}</td>
+    <td>${OH[i]||'—'}</td>
+    <td>${OH[i]?PCT[i]+'%':'—'}</td>
+    <td>${TATT[i]||'—'}</td>
+    <td style="color:#4ade80">${S1[i]||'—'}</td>
+    <td style="color:#f87171">${S0[i]||'—'}</td>
+    <td style="color:#fbbf24">${S2[i]||'—'}</td>
+    <td style="color:#a78bfa">${S3[i]||'—'}</td>
+    <td>${pill(RRATE[i],[80,50])}</td>
+    <td>${NEED[i]||'—'}</td>
+    <td>${SUCC[i]||'—'}</td>
+    <td>${pill(NRATE[i],[80,50])}</td>
+  `;
+  tb.appendChild(row);
+});
+</script>
+</body>
+</html>
