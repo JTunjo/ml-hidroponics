@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greenhouse Environmental Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; font-size: 14px; }
+  header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 20px 32px; display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 20px; font-weight: 700; color: #0f172a; }
+  header span { font-size: 13px; color: #64748b; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 32px 48px; }
+  .section-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 36px 0 16px;
+                    display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; display: block; width: 4px; height: 16px;
+                             background: #3b82f6; border-radius: 2px; }
+
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 4px; }
+  .kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;
+               padding: 16px 18px; }
+  .kpi-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase;
+                      letter-spacing: .05em; color: #64748b; margin-bottom: 6px; }
+  .kpi-card .value { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1; }
+  .kpi-card .sub   { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .kpi-card.blue   { border-left: 3px solid #3b82f6; }
+  .kpi-card.green  { border-left: 3px solid #10b981; }
+  .kpi-card.orange { border-left: 3px solid #f59e0b; }
+  .kpi-card.purple { border-left: 3px solid #8b5cf6; }
+  .kpi-card.red    { border-left: 3px solid #ef4444; }
+  .kpi-card.teal   { border-left: 3px solid #14b8a6; }
+
+  /* Chart rows */
+  .chart-row { display: grid; gap: 18px; margin-bottom: 18px; }
+  .chart-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .chart-row.cols-1 { grid-template-columns: 1fr; }
+  .chart-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; }
+  .chart-card h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 14px; }
+  .chart-card canvas { max-height: 280px; }
+  .chart-card.tall canvas { max-height: 340px; }
+
+  /* Summary */
+  .summary { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;
+              padding: 24px 28px; line-height: 1.7; }
+  .summary h3 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 20px 0 8px; }
+  .summary h3:first-child { margin-top: 0; }
+  .summary p  { font-size: 13px; color: #374151; margin-bottom: 6px; }
+  .summary strong { color: #0f172a; }
+
+  /* Legend pill */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; font-size: 12px; color: #64748b; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Greenhouse Environmental Dashboard</h1>
+  <span>Sensor data · 10-min windows · 2026-03-02 → 2026-04-15</span>
+</header>
+
+<div class="container">
+
+<!-- ── Section 1: Data Quality ── -->
+<div class="section-title">Data Coverage</div>
+<div class="kpi-grid">
+  <div class="kpi-card blue">
+    <div class="label">10-min Windows</div>
+    <div class="value">4,027</div>
+    <div class="sub">3,786 complete (all 4 sensors)</div>
+  </div>
+  <div class="kpi-card blue">
+    <div class="label">Date Range</div>
+    <div class="value" style="font-size:16px">2026-03-02</div>
+    <div class="sub">to 2026-04-15</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="label">Pump-Active Days</div>
+    <div class="value">22</div>
+    <div class="sub">10 days — no pump</div>
+  </div>
+</div>
+
+<!-- ── Section 2: Thermal Buffer ── -->
+<div class="section-title">Greenhouse Thermal Buffer</div>
+<div class="kpi-grid">
+  <div class="kpi-card blue">
+    <div class="label">Avg Daytime Temp Inside</div>
+    <div class="value">19.4°C</div>
+    <div class="sub">06:00–20:00 local</div>
+  </div>
+  <div class="kpi-card teal">
+    <div class="label">Avg Daytime Temp Outside</div>
+    <div class="value">17.7°C</div>
+    <div class="sub">06:00–20:00 local</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="label">Avg Daytime Temp Lift</div>
+    <div class="value">+1.72°C</div>
+    <div class="sub">Inside minus outside</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="label">Peak Temp Lift</div>
+    <div class="value">+14.19°C</div>
+    <div class="sub">Around 06:00 local</div>
+  </div>
+</div>
+<div class="chart-row cols-2">
+  <div class="chart-card">
+    <h4>Inside vs Outside Temperature · Hourly Average (°C)</h4>
+    <canvas id="tempHourly"></canvas>
+  </div>
+  <div class="chart-card">
+    <h4>Temperature Differential (Inside − Outside) · Hourly Average (°C)</h4>
+    <canvas id="tempDelta"></canvas>
+  </div>
+</div>
+<div class="chart-row cols-2">
+  <div class="chart-card tall">
+    <h4>Daily Average Temperature (°C)</h4>
+    <canvas id="tempDaily"></canvas>
+  </div>
+  <div class="chart-card tall">
+    <h4>Daily Temperature Lift (Inside − Outside, °C)</h4>
+    <canvas id="tempDeltaDaily"></canvas>
+  </div>
+</div>
+
+<!-- ── Section 3: AH Buffer ── -->
+<div class="section-title">Absolute Humidity Enrichment</div>
+<div class="kpi-grid">
+  <div class="kpi-card blue">
+    <div class="label">Avg Daytime AH Inside</div>
+    <div class="value">12.03</div>
+    <div class="sub">g/m³ · 06:00–20:00 local</div>
+  </div>
+  <div class="kpi-card teal">
+    <div class="label">Avg Daytime AH Outside</div>
+    <div class="value">11.07</div>
+    <div class="sub">g/m³ · 06:00–20:00 local</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="label">Avg Daytime AH Enrichment</div>
+    <div class="value">+0.952</div>
+    <div class="sub">g/m³ inside above outside</div>
+  </div>
+  <div class="kpi-card purple">
+    <div class="label">Peak AH Enrichment</div>
+    <div class="value">+40.019</div>
+    <div class="sub">g/m³ around 06:00 local</div>
+  </div>
+</div>
+<div class="chart-row cols-2">
+  <div class="chart-card">
+    <h4>Inside vs Outside Absolute Humidity · Hourly Average (g/m³)</h4>
+    <canvas id="ahHourly"></canvas>
+  </div>
+  <div class="chart-card">
+    <h4>AH Differential (Inside − Outside) · Hourly Average (g/m³)</h4>
+    <canvas id="ahDelta"></canvas>
+  </div>
+</div>
+<div class="chart-row cols-2">
+  <div class="chart-card tall">
+    <h4>Daily Average Absolute Humidity (g/m³)</h4>
+    <canvas id="ahDaily"></canvas>
+  </div>
+  <div class="chart-card tall">
+    <h4>Daily AH Enrichment (Inside − Outside, g/m³)</h4>
+    <canvas id="ahDeltaDaily"></canvas>
+  </div>
+</div>
+
+<!-- ── Section 4: Pump Influence ── -->
+<div class="section-title">Net Pump Influence on Absolute Humidity</div>
+<div class="kpi-grid">
+  <div class="kpi-card blue">
+    <div class="label">Median Daily AH Score</div>
+    <div class="value">1.5</div>
+    <div class="sub">Scale 0–7 · composite baseline</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="label">Days with &gt;50% Positive Events</div>
+    <div class="value" id="positiveDay">—</div>
+    <div class="sub">out of 22 pump-active days</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="label">Avg % Positive Events / Day</div>
+    <div class="value">54.9%</div>
+    <div class="sub">events with net AH &gt; 0</div>
+  </div>
+</div>
+<div class="legend">
+  <span><span class="dot" style="background:rgba(59,130,246,0.75)"></span>Pump active</span>
+  <span><span class="dot" style="background:rgba(200,200,200,0.5)"></span>No pump</span>
+</div>
+<div class="chart-row cols-1">
+  <div class="chart-card tall">
+    <h4>Daily Median AH Score (0–7) — pump-active days in blue, no-pump in grey</h4>
+    <canvas id="scoreTimeline"></canvas>
+  </div>
+</div>
+<div class="chart-row cols-1">
+  <div class="chart-card tall">
+    <h4>% of Pump Events with Positive Net AH (per day)</h4>
+    <canvas id="pctTimeline"></canvas>
+  </div>
+</div>
+
+<!-- ── Section 5: Summary ── -->
+<div class="section-title">Analytical Summary</div>
+<div class="summary">
+  
+<h3>Dataset Coverage</h3>
+<p>The 10-minute aggregated dataset spans <strong>2026-03-02</strong> to
+<strong>2026-04-15</strong>, comprising <strong>4,027</strong>
+time windows of which <strong>3,786</strong> (94%)
+have complete readings from all four sensors.</p>
+
+
+<h3>Thermal Buffer Effect</h3>
+<p>During daytime hours (06:00–20:00 local), the greenhouse interior averages
+<strong>19.4°C</strong> vs. <strong>17.7°C</strong>
+outside — a mean lift of <strong>+1.72°C</strong>. The peak thermal
+gain reaches <strong>+14.19°C</strong> around 06:00 local time,
+when solar irradiance is highest and the greenhouse structure traps radiant heat most effectively.</p>
+<p>After sunset, this dynamic reverses: the interior cools below ambient temperature roughly
+<strong>34%</strong> of nighttime windows, suggesting moderate heat retention
+capacity but insufficient thermal mass for full-night temperature maintenance.</p>
+
+
+<h3>Absolute Humidity Enrichment</h3>
+<p>Temperature-corrected Absolute Humidity (AH, g/m³) reveals that the greenhouse interior
+holds on average <strong>+0.95 g/m³</strong> more water vapour than
+the exterior during daytime. Peak enrichment occurs around 06:00 local
+(<strong>+40.02 g/m³</strong>), driven by a combination of evapotranspiration
+from plants and limited air exchange with the outside.</p>
+<p>The correlation between interior and exterior AH is <strong>0.78</strong>, indicating
+that large-scale weather patterns dominate the ambient moisture level while the greenhouse
+provides a consistent positive offset. On days with heavy rainfall or cloud cover, the inside–outside
+AH gap narrows; on dry, sunny days it widens due to higher plant transpiration rates.</p>
+
+
+<h3>RH Ceiling Effect</h3>
+<p>Approximately <strong>55%</strong> of interior RH readings reach or exceed
+99% — the practical sensor ceiling. This saturation renders RH a poor discriminator of actual
+moisture content during those periods. Absolute Humidity is therefore the preferred metric for
+evaluating both greenhouse buffering capacity and pump effectiveness in this dataset.</p>
+
+
+<h3>Pump Net AH Influence</h3>
+<p>Across <strong>22</strong> days with recorded pump activity, the median
+per-event net AH impact (against the composite 33/67 inside–outside baseline) yields a
+median daily AH score of <strong>1.5</strong> (scale 0–7).
+On <strong>14</strong> out of 22 pump-active days,
+more than half of pump events showed a positive net AH increase above the climate baseline.</p>
+<p>The remaining days with negative or near-zero scores are consistent with the three
+confounding factors identified in the event-window analysis: (1) inside RH often already
+saturated, leaving no headroom for additional vapour; (2) the 45-second pump pulse is short
+relative to the 30-minute analysis window; and (3) afternoon heat significantly raises
+the vapour-pressure deficit, requiring disproportionately more water to shift AH.</p>
+
+
+<h3>Operational Insight</h3>
+<p>The greenhouse delivers a consistent <strong>thermal and hygroscopic buffer</strong>:
+interior temperature is reliably warmer during the productive daytime hours and AH is
+consistently elevated. The pump system adds net moisture above the ambient trend on most
+active days, though its effect is partially masked by sensor saturation and the greenhouse's
+tight coupling to exterior ambient humidity. Extending pump pulse duration, operating
+preferentially in the early morning (06:00–10:00) when the inside–outside differential
+is largest, and improving greenhouse sealing would be the highest-leverage improvements
+to raise the measurable pump AH impact.</p>
+
+</div>
+
+</div><!-- /container -->
+
+<script>
+const HOURS  = ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
+const DAYS   = ["2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-07", "2026-03-08", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-14", "2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15"];
+
+const tempInH  = [10.67, 11.21, 15.4, 22.84, 28.71, 29.43, 32.78, 33.13, 30.89, 27.96, 28.96, 24.55, 17.1, 13.85, 12.85, 12.35, 11.86, 11.78, 11.44, 11.16, 11.03, 10.84, 10.78, 10.74];
+const tempOutH = [10.99, 11.37, 14.05, 19.3, 23.76, 24.52, 26.79, 27.1, 25.11, 23.65, 24.3, 20.97, 16.67, 14.46, 13.47, 12.93, 12.43, 12.26, 11.91, 11.61, 11.42, 11.24, 11.18, 11.07];
+const ahInH    = [9.828, 10.164, 13.256, 17.361, 17.945, 17.129, 19.616, 14.494, 13.764, 12.643, 12.38, 12.206, 11.512, 11.25, 10.994, 10.77, 10.52, 10.488, 10.281, 10.143, 10.069, 9.952, 9.912, 9.882];
+const ahOutH   = [9.874, 10.118, 11.582, 13.054, 13.104, 12.264, 12.221, 12.175, 11.813, 11.678, 11.764, 11.584, 10.979, 10.802, 10.7, 10.607, 10.46, 10.431, 10.296, 10.2, 10.12, 10.015, 10.018, 9.939];
+const tempDltH = [-0.32, -0.167, 1.355, 3.542, 4.948, 4.913, 5.997, 6.032, 5.78, 4.314, 4.669, 3.573, 0.435, -0.616, -0.618, -0.581, -0.574, -0.486, -0.466, -0.444, -0.39, -0.393, -0.401, -0.336];
+const ahDltH   = [-0.046, 0.046, 1.674, 4.307, 4.842, 4.865, 7.395, 2.319, 1.951, 0.966, 0.616, 0.622, 0.533, 0.448, 0.295, 0.163, 0.06, 0.057, -0.015, -0.058, -0.05, -0.064, -0.105, -0.058];
+
+const dTempIn  = [28.667, 17.778, 16.359, 18.173, 17.924, 17.556, 17.432, 17.207, 17.183, 19.567, 16.618, 19.518, 19.356, 18.648, 17.117, 18.28, 14.309, 15.937, 16.211, 16.997, 17.715, 18.08, 24.992, 22.298, 19.581, 20.305, 18.02, 18.123, 18.125, 19.35, 19.138, 17.111];
+const dTempOut = [23.21, 16.123, 15.196, 16.939, 16.83, 16.174, 16.179, 15.882, 16.121, 17.595, 15.494, 17.004, 17.504, 16.835, 16.27, 16.785, 13.554, 14.348, 14.471, 15.095, 16.355, 16.815, 19.856, 20.797, 17.725, 18.006, 16.794, 16.82, 16.882, 17.666, 17.717, 15.709];
+const dAhIn    = [11.979, 10.485, 10.788, 13.026, 11.539, 11.552, 13.438, 13.346, 13.205, 14.112, 13.792, 12.255, 11.978, 12.035, 12.048, 13.974, 12.656, 11.591, 13.834, 11.479, 11.996, 12.567, 12.52, 10.591, 10.875, 11.55, 10.596, 10.544, 10.014, 12.594, 13.093, 14.881];
+const dAhOut   = [12.11, 10.201, 10.474, 11.274, 11.159, 11.187, 11.418, 11.557, 11.606, 11.847, 11.54, 11.42, 11.147, 11.096, 10.84, 11.157, 11.212, 10.301, 10.374, 10.831, 11.615, 11.49, 11.474, 10.636, 10.44, 10.215, 10.179, 9.953, 9.639, 11.599, 12.086, 12.95];
+const dTempDlt = [5.457, 1.655, 1.163, 1.234, 1.093, 1.382, 1.254, 1.324, 1.061, 1.972, 1.124, 2.514, 1.852, 1.813, 0.847, 1.495, 0.754, 1.589, 1.74, 1.902, 1.36, 1.265, 5.136, 1.501, 1.856, 2.299, 1.227, 1.303, 1.243, 1.684, 1.421, 1.402];
+const dAhDlt   = [-0.131, 0.284, 0.314, 1.752, 0.38, 0.365, 2.02, 1.789, 1.599, 2.266, 2.252, 0.835, 0.831, 0.939, 1.207, 2.818, 1.444, 1.29, 3.459, 0.648, 0.382, 1.077, 1.046, -0.045, 0.435, 1.335, 0.417, 0.59, 0.374, 0.995, 1.007, 1.931];
+const dScore   = [null, null, null, 7.0, 3.0, 2.0, 0.0, 5.5, 7.0, 3.5, 0.0, 1.0, 1.0, 0.0, 4.0, 1.5, 1.5, 0.0, 7.0, 0.0, null, null, null, null, null, null, null, 0.0, 0.0, 2.0, 0.0, 7.0];
+const dPctPos  = [null, null, null, 100.0, 66.667, 66.667, 25.0, 75.0, 60.0, 50.0, 33.333, 66.667, 66.667, 33.333, 100.0, 50.0, 50.0, 0.0, 66.667, 40.0, null, null, null, null, null, null, null, 25.0, 33.333, 66.667, 33.333, 100.0];
+const dNEvents = [0, 0, 0, 1, 3, 3, 4, 4, 6, 4, 3, 3, 4, 3, 2, 2, 2, 2, 3, 5, 0, 0, 0, 0, 0, 0, 0, 4, 3, 3, 3, 1];
+const barColScore  = ["rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)", "rgba(59,130,246,0.75)"];
+const barColPct    = ["rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(200,200,200,0.4)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)", "rgba(16,185,129,0.75)"];
+const pumpBg       = ["rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)", "rgba(59,130,246,0.08)"];
+
+// Count positive days
+const positiveDays = dScore.filter((v,i) => dNEvents[i]>0 && v !== null && v >= 1).length;
+document.getElementById('positiveDay').textContent = positiveDays;
+
+const baseOpts = {
+  responsive: true,
+  maintainAspectRatio: true,
+  interaction: { mode: 'index', intersect: false },
+  plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } },
+              tooltip: { bodyFont: { size: 11 } } },
+  scales: { x: { ticks: { font: { size: 10 } } },
+             y: { ticks: { font: { size: 10 } } } },
+};
+
+function lineOpts(yLabel) {
+  return JSON.parse(JSON.stringify({
+    ...baseOpts,
+    scales: { x: { ticks: { font: { size: 10 } } },
+               y: { title: { display: true, text: yLabel, font: { size: 11 } },
+                    ticks: { font: { size: 10 } } } }
+  }));
+}
+
+function mkLine(id, labels, datasets, yLabel) {
+  new Chart(document.getElementById(id), {
+    type: 'line', data: { labels, datasets },
+    options: lineOpts(yLabel)
+  });
+}
+
+function mkBar(id, labels, datasets, yLabel) {
+  new Chart(document.getElementById(id), {
+    type: 'bar', data: { labels, datasets },
+    options: {
+      ...lineOpts(yLabel),
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 20 } },
+        y: { title: { display: true, text: yLabel, font: { size: 11 } },
+              ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// ── Hourly: Temperature ──
+mkLine('tempHourly', HOURS, [
+  { label: 'Inside (°C)',  data: tempInH,  borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
+     fill: false, tension: 0.4, pointRadius: 3 },
+  { label: 'Outside (°C)', data: tempOutH, borderColor: '#14b8a6', backgroundColor: 'rgba(20,184,166,0.1)',
+     fill: false, tension: 0.4, pointRadius: 3 },
+], '°C');
+
+// ── Hourly: Temp Delta ──
+new Chart(document.getElementById('tempDelta'), {
+  type: 'bar',
+  data: { labels: HOURS, datasets: [{
+    label: 'Temp lift (°C)',
+    data: tempDltH,
+    backgroundColor: tempDltH.map(v => v >= 0 ? 'rgba(59,130,246,0.65)' : 'rgba(239,68,68,0.55)'),
+  }] },
+  options: {
+    ...lineOpts('°C'),
+    scales: { x: { ticks: { font: { size: 10 } } }, y: { title: { display:true, text:'°C' } } }
+  }
+});
+
+// ── Hourly: AH ──
+mkLine('ahHourly', HOURS, [
+  { label: 'AH Inside (g/m³)',  data: ahInH,  borderColor: '#8b5cf6', fill: false, tension: 0.4, pointRadius: 3 },
+  { label: 'AH Outside (g/m³)', data: ahOutH, borderColor: '#f59e0b', fill: false, tension: 0.4, pointRadius: 3 },
+], 'g/m³');
+
+// ── Hourly: AH Delta ──
+new Chart(document.getElementById('ahDelta'), {
+  type: 'bar',
+  data: { labels: HOURS, datasets: [{
+    label: 'AH enrichment (g/m³)',
+    data: ahDltH,
+    backgroundColor: ahDltH.map(v => v >= 0 ? 'rgba(139,92,246,0.65)' : 'rgba(239,68,68,0.55)'),
+  }] },
+  options: {
+    ...lineOpts('g/m³'),
+    scales: { x: { ticks: { font: { size: 10 } } }, y: { title: { display:true, text:'g/m³' } } }
+  }
+});
+
+// ── Daily: Temperature ──
+const dailyXOpts = {
+  responsive: true, maintainAspectRatio: true,
+  interaction: { mode: 'index', intersect: false },
+  plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } } },
+  scales: {
+    x: { ticks: { font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 20 } },
+    y: { ticks: { font: { size: 10 } } }
+  }
+};
+
+new Chart(document.getElementById('tempDaily'), {
+  type: 'line',
+  data: { labels: DAYS, datasets: [
+    { label:'Inside (°C)', data:dTempIn,  borderColor:'#3b82f6', fill:false, tension:0.3,
+       pointRadius:2, borderWidth:2 },
+    { label:'Outside (°C)', data:dTempOut, borderColor:'#14b8a6', fill:false, tension:0.3,
+       pointRadius:2, borderWidth:2 },
+  ]},
+  options: dailyXOpts
+});
+
+new Chart(document.getElementById('tempDeltaDaily'), {
+  type: 'bar',
+  data: { labels: DAYS, datasets: [
+    { label:'Temp lift (°C)', data:dTempDlt,
+       backgroundColor: dTempDlt.map(v => v===null ? '#eee' : (v>=0?'rgba(59,130,246,0.6)':'rgba(239,68,68,0.5)')),
+    }
+  ]},
+  options: { ...dailyXOpts, scales: {
+    x: { ticks: { font:{ size:9 }, maxRotation:45, autoSkip:true, maxTicksLimit:20 } },
+    y: { title:{ display:true, text:'°C' } }
+  } }
+});
+
+// ── Daily: AH ──
+new Chart(document.getElementById('ahDaily'), {
+  type: 'line',
+  data: { labels: DAYS, datasets: [
+    { label:'AH Inside (g/m³)', data:dAhIn,  borderColor:'#8b5cf6', fill:false, tension:0.3,
+       pointRadius:2, borderWidth:2 },
+    { label:'AH Outside (g/m³)', data:dAhOut, borderColor:'#f59e0b', fill:false, tension:0.3,
+       pointRadius:2, borderWidth:2 },
+  ]},
+  options: dailyXOpts
+});
+
+new Chart(document.getElementById('ahDeltaDaily'), {
+  type: 'bar',
+  data: { labels: DAYS, datasets: [
+    { label:'AH enrichment (g/m³)', data:dAhDlt,
+       backgroundColor: dAhDlt.map(v => v===null ? '#eee' : (v>=0?'rgba(139,92,246,0.6)':'rgba(239,68,68,0.5)')),
+    }
+  ]},
+  options: { ...dailyXOpts, scales: {
+    x: { ticks: { font:{ size:9 }, maxRotation:45, autoSkip:true, maxTicksLimit:20 } },
+    y: { title:{ display:true, text:'g/m³' } }
+  } }
+});
+
+// ── Score timeline ──
+new Chart(document.getElementById('scoreTimeline'), {
+  type: 'bar',
+  data: { labels: DAYS, datasets: [
+    { label:'Median AH Score (0–7)', data:dScore,
+       backgroundColor: barColScore, borderWidth: 0 }
+  ]},
+  options: { ...dailyXOpts,
+    scales: {
+      x: { ticks: { font:{ size:9 }, maxRotation:45, autoSkip:true, maxTicksLimit:20 } },
+      y: { min:0, max:7, title:{ display:true, text:'Score' }, ticks:{ stepSize:1 } }
+    }
+  }
+});
+
+// ── % Positive timeline ──
+new Chart(document.getElementById('pctTimeline'), {
+  type: 'bar',
+  data: { labels: DAYS, datasets: [
+    { label:'% Positive net AH events', data:dPctPos,
+       backgroundColor: barColPct, borderWidth: 0 }
+  ]},
+  options: { ...dailyXOpts,
+    scales: {
+      x: { ticks: { font:{ size:9 }, maxRotation:45, autoSkip:true, maxTicksLimit:20 } },
+      y: { min:0, max:100, title:{ display:true, text:'%' } }
+    }
+  }
+});
+
+</script>
+</body>
+</html>
