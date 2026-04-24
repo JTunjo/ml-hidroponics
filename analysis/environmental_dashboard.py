@@ -323,73 +323,76 @@ def generate_summary(kpi, df10, event_daily):
     lines = []
 
     lines.append(f"""
-<h3>Dataset Coverage</h3>
-<p>The 10-minute aggregated dataset spans <strong>{kpi['first_day']}</strong> to
-<strong>{kpi['last_day']}</strong>, comprising <strong>{kpi['total_buckets']:,}</strong>
-time windows of which <strong>{kpi['complete_buckets']:,}</strong> ({100*kpi['complete_buckets']/kpi['total_buckets']:.0f}%)
-have complete readings from all four sensors.</p>
+<h3>Cobertura del conjunto de datos</h3>
+<p>El conjunto de datos agregado en ventanas de 10 minutos abarca desde <strong>{kpi['first_day']}</strong> hasta
+<strong>{kpi['last_day']}</strong>, con un total de <strong>{kpi['total_buckets']:,}</strong>
+ventanas temporales, de las cuales <strong>{kpi['complete_buckets']:,}</strong> ({100*kpi['complete_buckets']/kpi['total_buckets']:.0f}%)
+cuentan con lecturas completas de los cuatro sensores.</p>
 """)
 
     lines.append(f"""
-<h3>Thermal Buffer Effect</h3>
-<p>During daytime hours (06:00–20:00 local), the greenhouse interior averages
-<strong>{kpi['avg_daytime_temp_in']}°C</strong> vs. <strong>{kpi['avg_daytime_temp_out']}°C</strong>
-outside — a mean lift of <strong>+{kpi['avg_temp_lift']}°C</strong>. The peak thermal
-gain reaches <strong>+{kpi['peak_temp_lift']}°C</strong> around {peak_hour_str} local time,
-when solar irradiance is highest and the greenhouse structure traps radiant heat most effectively.</p>
-<p>After sunset, this dynamic reverses: the interior cools below ambient temperature roughly
-<strong>{night_cool_pct:.0f}%</strong> of nighttime windows, suggesting moderate heat retention
-capacity but insufficient thermal mass for full-night temperature maintenance.</p>
+<h3>Efecto de amortiguamiento térmico</h3>
+<p>Durante las horas diurnas (06:00–20:00 hora local), el interior del invernadero promedió
+<strong>{kpi['avg_daytime_temp_in']}°C</strong> frente a <strong>{kpi['avg_daytime_temp_out']}°C</strong>
+en el exterior — un incremento medio de <strong>+{kpi['avg_temp_lift']}°C</strong>. La ganancia térmica
+máxima alcanza <strong>+{kpi['peak_temp_lift']}°C</strong> alrededor de las {peak_hour_str} hora local,
+momento en que la irradiancia solar es mayor y la estructura del invernadero retiene el calor radiante con mayor eficacia.</p>
+<p>Tras la puesta del sol, esta dinámica se invierte: el interior cae por debajo de la temperatura ambiente en
+aproximadamente el <strong>{night_cool_pct:.0f}%</strong> de las ventanas nocturnas, lo que sugiere una capacidad
+moderada de retención de calor pero masa térmica insuficiente para mantener la temperatura durante toda la noche.</p>
 """)
 
     lines.append(f"""
-<h3>Absolute Humidity Enrichment</h3>
-<p>Temperature-corrected Absolute Humidity (AH, g/m³) reveals that the greenhouse interior
-holds on average <strong>{kpi['avg_ah_enrich']:+.2f} g/m³</strong> more water vapour than
-the exterior during daytime. Peak enrichment occurs around {peak_ah_hour_str} local
-(<strong>+{kpi['peak_ah_enrich']:.2f} g/m³</strong>), driven by a combination of evapotranspiration
-from plants and limited air exchange with the outside.</p>
-<p>The correlation between interior and exterior AH is <strong>{corr:.2f}</strong>, indicating
-that large-scale weather patterns dominate the ambient moisture level while the greenhouse
-provides a consistent positive offset. On days with heavy rainfall or cloud cover, the inside–outside
-AH gap narrows; on dry, sunny days it widens due to higher plant transpiration rates.</p>
+<h3>Enriquecimiento de humedad absoluta</h3>
+<p>La Humedad Absoluta (HA, g/m³), corregida por temperatura, revela que el interior del invernadero
+retiene en promedio <strong>{kpi['avg_ah_enrich']:+.2f} g/m³</strong> más vapor de agua que el exterior
+durante el día. El enriquecimiento máximo se produce alrededor de las {peak_ah_hour_str} hora local
+(<strong>+{kpi['peak_ah_enrich']:.2f} g/m³</strong>), impulsado por la combinación de la evapotranspiración
+de las plantas y el limitado intercambio de aire con el exterior.</p>
+<p>La correlación entre la HA interior y exterior es de <strong>{corr:.2f}</strong>, lo que indica
+que los patrones meteorológicos de gran escala dominan el nivel de humedad ambiental, mientras que
+el invernadero aporta un diferencial positivo consistente. En días de lluvia intensa o cielo cubierto,
+la brecha interior–exterior de HA se estrecha; en días soleados y secos, se amplía por el aumento de
+la tasa de transpiración de las plantas.</p>
 """)
 
     lines.append(f"""
-<h3>RH Ceiling Effect</h3>
-<p>Approximately <strong>{rh_sat_pct:.0f}%</strong> of interior RH readings reach or exceed
-99% — the practical sensor ceiling. This saturation renders RH a poor discriminator of actual
-moisture content during those periods. Absolute Humidity is therefore the preferred metric for
-evaluating both greenhouse buffering capacity and pump effectiveness in this dataset.</p>
+<h3>Efecto de saturación del sensor de HR</h3>
+<p>Aproximadamente el <strong>{rh_sat_pct:.0f}%</strong> de las lecturas interiores de Humedad Relativa
+alcanzan o superan el 99% — el límite práctico del sensor. Esta saturación hace que la HR sea un discriminador
+deficiente del contenido real de humedad durante esos períodos. La Humedad Absoluta es, por tanto, la métrica
+preferida para evaluar tanto la capacidad de amortiguamiento del invernadero como la efectividad de la bomba
+en este conjunto de datos.</p>
 """)
 
     if event_daily is not None and not event_daily.empty:
         n_positive_days = (event_daily['pct_positive'] >= 50).sum()
         med_score = event_daily['median_score'].median()
         lines.append(f"""
-<h3>Pump Net AH Influence</h3>
-<p>Across <strong>{kpi['n_pump_days']}</strong> days with recorded pump activity, the median
-per-event net AH impact (against the composite 33/67 inside–outside baseline) yields a
-median daily AH score of <strong>{kpi['overall_median_score']}</strong> (scale 0–7).
-On <strong>{n_positive_days}</strong> out of {kpi['n_pump_days']} pump-active days,
-more than half of pump events showed a positive net AH increase above the climate baseline.</p>
-<p>The remaining days with negative or near-zero scores are consistent with the three
-confounding factors identified in the event-window analysis: (1) inside RH often already
-saturated, leaving no headroom for additional vapour; (2) the 45-second pump pulse is short
-relative to the 30-minute analysis window; and (3) afternoon heat significantly raises
-the vapour-pressure deficit, requiring disproportionately more water to shift AH.</p>
+<h3>Influencia neta de la bomba en la humedad absoluta</h3>
+<p>A lo largo de <strong>{kpi['n_pump_days']}</strong> días con actividad registrada de la bomba, el impacto
+neto medio por evento en la HA (frente a la línea base compuesta 33/67 interior–exterior) resulta en una
+puntuación mediana diaria de HA de <strong>{kpi['overall_median_score']}</strong> (escala 0–7).
+En <strong>{n_positive_days}</strong> de los {kpi['n_pump_days']} días con bomba activa,
+más de la mitad de los eventos de bombeo mostraron un incremento neto positivo de HA por encima de la
+línea base climática.</p>
+<p>Los días restantes con puntuaciones negativas o cercanas a cero son consistentes con los tres factores
+de confusión identificados en el análisis de ventana de eventos: (1) la HR interior frecuentemente ya saturada,
+sin margen para vapor adicional; (2) el pulso de la bomba de 45 segundos es corto en relación con la ventana
+de análisis de 30 minutos; y (3) el calor de la tarde eleva significativamente el déficit de presión de vapor,
+requiriendo proporcionalmente más agua para desplazar la HA.</p>
 """)
 
     lines.append(f"""
-<h3>Operational Insight</h3>
-<p>The greenhouse delivers a consistent <strong>thermal and hygroscopic buffer</strong>:
-interior temperature is reliably warmer during the productive daytime hours and AH is
-consistently elevated. The pump system adds net moisture above the ambient trend on most
-active days, though its effect is partially masked by sensor saturation and the greenhouse's
-tight coupling to exterior ambient humidity. Extending pump pulse duration, operating
-preferentially in the early morning (06:00–10:00) when the inside–outside differential
-is largest, and improving greenhouse sealing would be the highest-leverage improvements
-to raise the measurable pump AH impact.</p>
+<h3>Conclusión operativa</h3>
+<p>El invernadero ofrece un <strong>amortiguamiento térmico e higroscópico</strong> consistente:
+la temperatura interior es de manera fiable más alta durante las horas diurnas productivas y la HA
+se mantiene consistentemente elevada. El sistema de bomba agrega humedad neta por encima de la tendencia
+ambiental en la mayoría de los días activos, aunque su efecto queda parcialmente enmascarado por la
+saturación del sensor y el fuerte acoplamiento del invernadero con la humedad ambiental exterior.
+Ampliar la duración del pulso de la bomba, operar preferentemente en las primeras horas de la mañana
+(06:00–10:00) cuando el diferencial interior–exterior es mayor, y mejorar el sellado del invernadero
+serían las mejoras de mayor impacto para incrementar el efecto medible de la bomba en la HA.</p>
 """)
 
     return '\n'.join(lines)
@@ -655,7 +658,7 @@ def render_html(by_hour, hours, daily_full, kpi, summary_html):
 </div>
 
 <!-- ── Section 5: Summary ── -->
-<div class="section-title">Analytical Summary</div>
+<div class="section-title">Resumen Analítico</div>
 <div class="summary">
   {summary_html}
 </div>
